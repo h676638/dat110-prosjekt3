@@ -65,6 +65,10 @@ public class FileManager {
 		// hash the replica
 		
 		// store the hash in the replicafiles array.
+		for (int i = 0; i < numReplicas; i++) {
+			String curFile = this.filename + i;
+			replicafiles[i] = Hash.hashOf(curFile);
+		}
 	}
 	
     /**
@@ -97,6 +101,13 @@ public class FileManager {
     	// call the saveFileContent() on the successor and set isPrimary=true if logic above is true otherwise set isPrimary=false
     	
     	// increment counter
+		createReplicaFiles();
+		for(int i = 0; i < Util.numReplicas; i++) {
+			NodeInterface succ = chordnode.findSuccessor(replicafiles[i]);
+			succ.addKey(replicafiles[i]);
+			if (i == index) succ.saveFileContent(filename, replicafiles[i], bytesOfFile, true);
+			else succ.saveFileContent(filename, replicafiles[i], bytesOfFile, false);
+		}
 		return counter;
     }
 	
@@ -109,7 +120,13 @@ public class FileManager {
 	public Set<Message> requestActiveNodesForFile(String filename) throws RemoteException {
 
 		this.filename = filename;
-		activeNodesforFile = new HashSet<Message>(); 
+		activeNodesforFile = new HashSet<Message>();
+		setFilename(filename);
+		createReplicaFiles();
+		for (BigInteger each: replicafiles) {
+			NodeInterface node = chordnode.findSuccessor(each);
+			activeNodesforFile.add(node.getFilesMetadata(each));
+		}
 
 		// Task: Given a filename, find all the peers that hold a copy of this file
 		
@@ -141,7 +158,11 @@ public class FileManager {
 		// use the primaryServer boolean variable contained in the Message class to check if it is the primary or not
 		
 		// return the primary when found (i.e., use Util.getProcessStub to get the stub and return it)
-		
+
+		for(Message each: activeNodesforFile) {
+			if(each.isPrimaryServer()) return Util.getProcessStub(each.getNodeName(), each.getPort());
+		}
+
 		return null; 
 	}
 	

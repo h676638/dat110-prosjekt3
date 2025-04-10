@@ -44,10 +44,14 @@ public class Util {
 		// if id = 9, then (6 < 9 <= 2) = true
 		
 		// Task: given an identifier, id: check whether pred < id <= node
-		
-		return false;
+		//BigInteger modId = id.mod(Hash.addressSize());
+		if (upper.compareTo(lower) < 0) return id.compareTo(lower) != -1 || id.compareTo(upper) != 1;
+		else return id.compareTo(lower) != -1 && id.compareTo(upper) != 1;
 
-	}
+		//id >= lower OR id <= upper
+		//lower <= id <= upper
+
+    }
 	
 	public static List<String> toString(List<NodeInterface> list) throws RemoteException {
 		List<String> nodestr = new ArrayList<String>();
